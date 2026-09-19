@@ -21,7 +21,7 @@ better.
   creates symlinks
 - `git` 2.23 or newer, for `git switch`
 
-Building from source additionally needs Rust 1.88 or newer and a C toolchain,
+Building from source additionally needs Rust 1.98 or newer and a C toolchain,
 which `git2` uses to build the bundled libgit2.
 
 ## Install

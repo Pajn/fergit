@@ -2,8 +2,10 @@
 name = "fergit"
 version = "0.1.0"
 edition = "2024"
-# Let-chains, used in the picker state machine, need this.
-rust-version = "1.88"
+# The toolchain pinned in rust-toolchain.toml is the floor. This states it
+# again for cargo, so building on anything older fails with a clear message
+# rather than an error from the middle of a dependency.
+rust-version = "1.98"
 description = "Interactive git add, branch switch and cherry-pick, with a built-in fuzzy picker"
 repository = "https://github.com/Pajn/fergit"
 license = "MIT OR Apache-2.0"
