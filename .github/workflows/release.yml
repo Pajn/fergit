@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  GH_TOKEN: ${{ github.token }}
+  GH_REPO: ${{ github.repository }}
+
+jobs:
+  # The release starts as a draft and is only published once every target has
+  # uploaded, so a failed build leaves nothing half-released for cargo-binstall
+  # to find.
+  draft:
+    name: Draft the release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Create the draft
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --draft \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes
+
+  build:
+    name: Build ${{ matrix.target }}
+    needs: draft
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-24.04-arm
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          # Built on the arm64 runner: Apple's toolchain cross-compiles to
+          # x86_64, including the bundled libgit2.
+          - target: x86_64-apple-darwin
+            os: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the pinned toolchain
+        run: |
+          rustup toolchain install
+          rustup target add ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      # The archive name and the directory inside it have to match the
+      # templates in [package.metadata.binstall], or `cargo binstall` will look
+      # in the wrong place.
+      - name: Package
+        run: |
+          name="fergit-${GITHUB_REF_NAME}-${{ matrix.target }}"
+          mkdir "$name"
+          cp "target/${{ matrix.target }}/release/fergit" "$name/"
+          cp README.md LICENSE-MIT LICENSE-APACHE "$name/"
+          # macOS tar otherwise smuggles AppleDouble "._" entries for any
+          # extended attributes into the archive.
+          COPYFILE_DISABLE=1 tar czf "$name.tar.gz" "$name"
+          shasum -a 256 "$name.tar.gz" > "$name.tar.gz.sha256"
+
+      - name: Upload to the draft
+        run: gh release upload "$GITHUB_REF_NAME" fergit-*.tar.gz fergit-*.tar.gz.sha256 --clobber
+
+  publish:
+    name: Publish the release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh release edit "$GITHUB_REF_NAME" --draft=false

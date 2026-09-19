@@ -17,11 +17,22 @@ better.
 
 ## Requirements
 
+- A Unix-like system: the picker talks to the terminal device, and `install`
+  creates symlinks
 - `git` 2.23 or newer, for `git switch`
-- Rust 1.88 or newer to build
-- A C toolchain, which `git2` needs to build the bundled libgit2
+
+Building from source additionally needs Rust 1.88 or newer and a C toolchain,
+which `git2` uses to build the bundled libgit2.
 
 ## Install
+
+A prebuilt binary, with no toolchain needed:
+
+```sh
+cargo binstall fergit
+```
+
+or build it:
 
 ```sh
 cargo install fergit

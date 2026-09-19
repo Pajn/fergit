@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Check on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # One platform failing is worth knowing about even if the other is fine.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7
+
+      # rust-toolchain.toml decides the version. Installing it as its own step
+      # keeps a download failure from looking like a compile failure.
+      - name: Install the pinned toolchain
+        run: rustup toolchain install
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Formatting
+        run: cargo fmt --check
+
+      - name: Lints
+        run: cargo clippy --all-targets --locked -- -D warnings
+
+      - name: Tests
+        run: cargo test --locked
+
+  msrv:
+    name: Builds on the oldest supported Rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Keeps the rust-version in Cargo.toml honest: the pinned toolchain is
+      # what we develop against, but the manifest promises something older.
+      - name: Read the promised minimum version
+        id: msrv
+        run: |
+          version=$(grep -m1 '^rust-version' Cargo.toml | cut -d'"' -f2)
+          echo "Cargo.toml promises Rust $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Install it
+        run: rustup toolchain install --profile minimal ${{ steps.msrv.outputs.version }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: msrv-${{ steps.msrv.outputs.version }}
+
+      # `+version` overrides rust-toolchain.toml, which would otherwise win.
+      - name: Check
+        run: cargo +${{ steps.msrv.outputs.version }} check --locked --all-targets
