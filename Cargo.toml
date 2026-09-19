@@ -2,6 +2,14 @@
 name = "fergit"
 version = "0.1.0"
 edition = "2024"
+# Let-chains, used in the picker state machine, need this.
+rust-version = "1.88"
+description = "Interactive git add, branch switch and cherry-pick, with a built-in fuzzy picker"
+repository = "https://github.com/Pajn/fergit"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+keywords = ["git", "cli", "tui", "fuzzy", "interactive"]
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 git2 = { version = "0.21.0", default-features = false }

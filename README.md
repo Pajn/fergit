@@ -18,10 +18,16 @@ better.
 ## Requirements
 
 - `git` 2.23 or newer, for `git switch`
-- Rust 1.85 or newer to build, for the 2024 edition
+- Rust 1.88 or newer to build
 - A C toolchain, which `git2` needs to build the bundled libgit2
 
 ## Install
+
+```sh
+cargo install fergit
+```
+
+or from a clone:
 
 ```sh
 cargo build --release
@@ -123,3 +129,12 @@ can leave it in raw mode.
 
 The layers are kept apart: `repo` knows git but not the terminal, `picker` knows
 the terminal but not git, and `rows` is the only place that knows both.
+
+## License
+
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
+[MIT license](LICENSE-MIT) at your option.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
+be dual licensed as above, without any additional terms or conditions.
