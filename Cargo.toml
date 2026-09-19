@@ -1,0 +1,20 @@
+[package]
+name = "fergit"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+git2 = { version = "0.21.0", default-features = false }
+lexopt = "0.3.2"
+nucleo-matcher = "0.3.1"
+ratatui = { version = "0.30.2", default-features = false, features = ["crossterm"] }
+thiserror = "2.0.20"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+# Unwinding is deliberate: the picker restores the terminal from a Drop
+# implementation, and aborting on panic would skip it and leave the terminal
+# in raw mode.
